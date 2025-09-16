@@ -18,17 +18,20 @@ window.onload = () => {
 document.getElementById("formulario").addEventListener("submit", function (e) {
   e.preventDefault();
 
-  const data = document.getElementById("data").value || new Date().toISOString().split("T")[0];
-  const dia = "Dia " + new Date(data).getDate().toString().padStart(2, "0");
+  const agora = new Date();
+  const data = agora.toLocaleDateString('pt-BR'); // Ex: 16/09/2025
+  const hora = agora.toLocaleTimeString('pt-BR'); // Ex: 14:35:22
+  const dia = "Dia " + agora.getDate().toString().padStart(2, "0");
 
   const registro = {
     Data: data,
-    Placa: document.getElementById("placa").value,
+    Hora: hora,
+    Placa: document.getElementById("placa").value.trim(),
     KmAtual: parseFloat(document.getElementById("kmAtual").value),
     Litros: parseFloat(document.getElementById("litros").value),
     Valor: parseFloat(document.getElementById("valor").value),
-    Tecnico: document.getElementById("tecnico").value,
-    Observacao: document.getElementById("observacao").value,
+    Tecnico: document.getElementById("tecnico").value.trim(),
+    Observacao: document.getElementById("observacao").value.trim(),
   };
 
   if (editandoRegistro !== null) {
@@ -96,6 +99,7 @@ function atualizarTabela(diaSelecionado = null) {
     const precoPorLitro = reg.Litros > 0 ? (reg.Valor / reg.Litros).toFixed(2) : "0.00";
 
     tr.appendChild(td(reg.Data));
+    tr.appendChild(td(reg.Hora));
     tr.appendChild(td(reg.Placa));
     tr.appendChild(td(reg.KmAtual));
     tr.appendChild(td(reg.Litros));
@@ -119,7 +123,6 @@ function editarRegistro(dia, index) {
   const reg = dadosPorDia[dia][index];
   if (!reg) return;
 
-  document.getElementById("data").value = reg.Data;
   document.getElementById("placa").value = reg.Placa;
   document.getElementById("kmAtual").value = reg.KmAtual;
   document.getElementById("litros").value = reg.Litros;
@@ -152,11 +155,12 @@ function exportarExcel() {
   for (const dia of diasOrdenados) {
     const registrosFormatados = dadosPorDia[dia].map((reg) => ({
       "Data": reg.Data,
+      "Hora": reg.Hora,
       "Placa": reg.Placa,
       "KM Atual": reg.KmAtual,
       "Litros": reg.Litros,
       "Valor (R$)": reg.Valor.toFixed(2),
-      "Preço por Litro (R$)": (reg.Litros > 0 ? (reg.Valor / reg.Litros).toFixed(2) : "0.00"),
+      "Preço por Litro (R$)": reg.Litros > 0 ? (reg.Valor / reg.Litros).toFixed(2) : "0.00",
       "Motorista": reg.Tecnico,
       "Observações": reg.Observacao,
     }));
@@ -170,7 +174,8 @@ function exportarExcel() {
 
 function fazerLogout() {
   if (confirm("Deseja realmente sair?")) {
-    localStorage.removeItem("AUTH_KEY");
-    window.location.href = "login.html";
+    localStorage.clear();
+    alert("Você saiu do sistema.");
+    location.reload();
   }
     }
