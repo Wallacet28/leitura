@@ -1,5 +1,4 @@
-const STORAGE_KEY = "cadastro_leitura";
-
+const STORAGE_KEY = "controle_abastecimento";
 let dadosPorDia = {};
 let editandoRegistro = null;
 
@@ -7,6 +6,7 @@ window.onload = () => {
   const data = new Date();
   const nomeMes = data.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' });
   document.getElementById("mesAtual").textContent = nomeMes.charAt(0).toUpperCase() + nomeMes.slice(1);
+  document.getElementById("mesAtualTabela").textContent = nomeMes.charAt(0).toUpperCase() + nomeMes.slice(1);
 
   const salvo = localStorage.getItem(STORAGE_KEY);
   if (salvo) dadosPorDia = JSON.parse(salvo);
@@ -18,31 +18,25 @@ window.onload = () => {
 document.getElementById("formulario").addEventListener("submit", function (e) {
   e.preventDefault();
 
-  const agora = new Date();
-  const dia = agora.getDate().toString().padStart(2, "0");
-  const nomeAba = "Dia " + dia;
+  const data = document.getElementById("data").value || new Date().toISOString().split("T")[0];
+  const dia = "Dia " + new Date(data).getDate().toString().padStart(2, "0");
 
   const registro = {
-    Data: agora.toLocaleDateString(),
-    Hora: agora.toLocaleTimeString(),
-    Nome: document.getElementById("nome").value,
-    Endereco: document.getElementById("endereco").value,
-    Rota: document.getElementById("rota").value,
-    Ligacao: document.getElementById("ligacao").value,
-    NumeroHidro: document.getElementById("numeroHidro").value,
-    LeituraAnterior: document.getElementById("leituraAnterior").value,
-    LeituraAtual: document.getElementById("leituraAtual").value,
-    Lacre: document.getElementById("lacre").value,
+    Data: data,
+    Placa: document.getElementById("placa").value,
+    KmAtual: parseFloat(document.getElementById("kmAtual").value),
+    Litros: parseFloat(document.getElementById("litros").value),
+    Valor: parseFloat(document.getElementById("valor").value),
+    Tecnico: document.getElementById("tecnico").value,
     Observacao: document.getElementById("observacao").value,
-    Assinatura: document.getElementById("assinatura").value,
   };
 
   if (editandoRegistro !== null) {
     dadosPorDia[editandoRegistro.dia][editandoRegistro.index] = registro;
     editandoRegistro = null;
   } else {
-    if (!dadosPorDia[nomeAba]) dadosPorDia[nomeAba] = [];
-    dadosPorDia[nomeAba].push(registro);
+    if (!dadosPorDia[dia]) dadosPorDia[dia] = [];
+    dadosPorDia[dia].push(registro);
   }
 
   localStorage.setItem(STORAGE_KEY, JSON.stringify(dadosPorDia));
@@ -51,7 +45,7 @@ document.getElementById("formulario").addEventListener("submit", function (e) {
   this.reset();
   document.querySelector('button[type="submit"]').textContent = "Salvar";
   preencherDias();
-  atualizarTabela(document.getElementById("selecionarDia").value || nomeAba);
+  atualizarTabela(dia);
 });
 
 function preencherDias() {
@@ -99,18 +93,16 @@ function atualizarTabela(diaSelecionado = null) {
       return td;
     };
 
+    const precoPorLitro = reg.Litros > 0 ? (reg.Valor / reg.Litros).toFixed(2) : "0.00";
+
     tr.appendChild(td(reg.Data));
-    tr.appendChild(td(reg.Hora));
-    tr.appendChild(td(reg.Nome));
-    tr.appendChild(td(reg.Endereco));
-    tr.appendChild(td(reg.Rota));
-    tr.appendChild(td(reg.Ligacao));
-    tr.appendChild(td(reg.NumeroHidro));
-    tr.appendChild(td(reg.LeituraAnterior));
-    tr.appendChild(td(reg.LeituraAtual));
-    tr.appendChild(td(reg.Lacre));
+    tr.appendChild(td(reg.Placa));
+    tr.appendChild(td(reg.KmAtual));
+    tr.appendChild(td(reg.Litros));
+    tr.appendChild(td("R$ " + reg.Valor.toFixed(2)));
+    tr.appendChild(td("R$ " + precoPorLitro));
+    tr.appendChild(td(reg.Tecnico));
     tr.appendChild(td(reg.Observacao));
-    tr.appendChild(td(reg.Assinatura));
 
     const tdAcoes = document.createElement("td");
     tdAcoes.className = "acoes";
@@ -124,19 +116,16 @@ function atualizarTabela(diaSelecionado = null) {
 }
 
 function editarRegistro(dia, index) {
-  const registro = dadosPorDia[dia][index];
-  if (!registro) return;
+  const reg = dadosPorDia[dia][index];
+  if (!reg) return;
 
-  document.getElementById("nome").value = registro.Nome;
-  document.getElementById("endereco").value = registro.Endereco;
-  document.getElementById("rota").value = registro.Rota;
-  document.getElementById("ligacao").value = registro.Ligacao;
-  document.getElementById("numeroHidro").value = registro.NumeroHidro;
-  document.getElementById("leituraAnterior").value = registro.LeituraAnterior;
-  document.getElementById("leituraAtual").value = registro.LeituraAtual;
-  document.getElementById("lacre").value = registro.Lacre;
-  document.getElementById("observacao").value = registro.Observacao;
-  document.getElementById("assinatura").value = registro.Assinatura;
+  document.getElementById("data").value = reg.Data;
+  document.getElementById("placa").value = reg.Placa;
+  document.getElementById("kmAtual").value = reg.KmAtual;
+  document.getElementById("litros").value = reg.Litros;
+  document.getElementById("valor").value = reg.Valor;
+  document.getElementById("tecnico").value = reg.Tecnico;
+  document.getElementById("observacao").value = reg.Observacao;
 
   editandoRegistro = { dia, index };
   document.querySelector('button[type="submit"]').textContent = "Atualizar";
@@ -163,24 +152,20 @@ function exportarExcel() {
   for (const dia of diasOrdenados) {
     const registrosFormatados = dadosPorDia[dia].map((reg) => ({
       "Data": reg.Data,
-      "Hora": reg.Hora,
-      "Nome": reg.Nome,
-      "Endereço": reg.Endereco,
-      "Rota": reg.Rota,
-      "Ligação": reg.Ligacao,
-      "Número do Hidrômetro": reg.NumeroHidro,
-      "Leitura Anterior": reg.LeituraAnterior,
-      "Leitura Atual": reg.LeituraAtual,
-      "Lacre": reg.Lacre,
-      "Observação": reg.Observacao,
-      "Assinatura": reg.Assinatura,
+      "Placa": reg.Placa,
+      "KM Atual": reg.KmAtual,
+      "Litros": reg.Litros,
+      "Valor (R$)": reg.Valor.toFixed(2),
+      "Preço por Litro (R$)": (reg.Litros > 0 ? (reg.Valor / reg.Litros).toFixed(2) : "0.00"),
+      "Motorista": reg.Tecnico,
+      "Observações": reg.Observacao,
     }));
 
     const ws = XLSX.utils.json_to_sheet(registrosFormatados);
     XLSX.utils.book_append_sheet(wb, ws, dia);
   }
 
-  XLSX.writeFile(wb, "cadastro_hidrometros.xlsx");
+  XLSX.writeFile(wb, "controle_abastecimento.xlsx");
 }
 
 function fazerLogout() {
@@ -188,4 +173,4 @@ function fazerLogout() {
     localStorage.removeItem("AUTH_KEY");
     window.location.href = "login.html";
   }
-}
+    }
