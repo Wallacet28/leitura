@@ -1,6 +1,5 @@
 const STORAGE_KEY = "controle_abastecimento";
 let dadosPorDia = {};
-let editandoRegistro = null;
 
 window.onload = () => {
   const data = new Date();
@@ -19,8 +18,8 @@ document.getElementById("formulario").addEventListener("submit", function (e) {
   e.preventDefault();
 
   const agora = new Date();
-  const data = agora.toLocaleDateString('pt-BR'); // Ex: 16/09/2025
-  const hora = agora.toLocaleTimeString('pt-BR'); // Ex: 14:35:22
+  const data = agora.toLocaleDateString('pt-BR');
+  const hora = agora.toLocaleTimeString('pt-BR');
   const dia = "Dia " + agora.getDate().toString().padStart(2, "0");
 
   const registro = {
@@ -34,19 +33,13 @@ document.getElementById("formulario").addEventListener("submit", function (e) {
     Observacao: document.getElementById("observacao").value.trim(),
   };
 
-  if (editandoRegistro !== null) {
-    dadosPorDia[editandoRegistro.dia][editandoRegistro.index] = registro;
-    editandoRegistro = null;
-  } else {
-    if (!dadosPorDia[dia]) dadosPorDia[dia] = [];
-    dadosPorDia[dia].push(registro);
-  }
+  if (!dadosPorDia[dia]) dadosPorDia[dia] = [];
+  dadosPorDia[dia].push(registro);
 
   localStorage.setItem(STORAGE_KEY, JSON.stringify(dadosPorDia));
   alert("Registro salvo com sucesso!");
 
   this.reset();
-  document.querySelector('button[type="submit"]').textContent = "Salvar";
   preencherDias();
   atualizarTabela(dia);
 });
@@ -111,28 +104,11 @@ function atualizarTabela(diaSelecionado = null) {
     const tdAcoes = document.createElement("td");
     tdAcoes.className = "acoes";
     tdAcoes.innerHTML = `
-      <button onclick="editarRegistro('${nomeAba}', ${index})">✏️</button>
       <button onclick="deletarRegistro('${nomeAba}', ${index})">❌</button>`;
     tr.appendChild(tdAcoes);
 
     tbody.appendChild(tr);
   });
-}
-
-function editarRegistro(dia, index) {
-  const reg = dadosPorDia[dia][index];
-  if (!reg) return;
-
-  document.getElementById("placa").value = reg.Placa;
-  document.getElementById("kmAtual").value = reg.KmAtual;
-  document.getElementById("litros").value = reg.Litros;
-  document.getElementById("valor").value = reg.Valor;
-  document.getElementById("tecnico").value = reg.Tecnico;
-  document.getElementById("observacao").value = reg.Observacao;
-
-  editandoRegistro = { dia, index };
-  document.querySelector('button[type="submit"]').textContent = "Atualizar";
-  window.scrollTo({ top: 0, behavior: "smooth" });
 }
 
 function deletarRegistro(dia, index) {
