@@ -1,61 +1,109 @@
-<!DOCTYPE html>
-<html lang="pt-br">
+<!doctype html>
+<html lang="pt-BR">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Controle de Abastecimento</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Formulário de Justificativa de Ponto</title>
   <link rel="stylesheet" href="style.css" />
-  <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
 </head>
-
 <body>
-  <h2>Controle de Abastecimento - <span id="mesAtual"></span></h2>
+  <div class="wrap">
+    <header>
+      <h1>Justificativa de Ponto Eletrônico</h1>
+      <p>Preencha os campos necessários e envie para assinatura.</p>
+    </header>
+    <div class="card">
+      <form id="justForm" novalidate>
+        <div class="row">
+          <div class="col-2">
+            <label for="nome">Nome do Servidor/Colaborador *</label>
+            <input id="nome" name="nome" type="text" required placeholder="Digite seu nome" />
+            <div class="error" id="err-nome">Informe seu nome.</div>
+          </div>
+          <div class="col-2">
+            <label for="matricula">Matrícula/Registro *</label>
+            <input id="matricula" name="matricula" type="text" required placeholder="Número da matrícula" />
+            <div class="error" id="err-matricula">Informe a matrícula.</div>
+          </div>
+        </div>
 
-  <form id="formulario">
+        <div class="row">
+          <div class="col-3">
+            <label for="data">Data do Ocorrido *</label>
+            <input id="data" name="data" type="date" required />
+            <div class="error" id="err-data">Informe a data.</div>
+          </div>
+          <div class="col-2">
+            <label for="horarios">Horário(s)</label>
+            <input id="horarios" name="horarios" type="text" placeholder="Ex: 08:00–12:00; 14:30" />
+          </div>
+        </div>
 
-    <label>Placa do veículo:<input type="text" id="placa" required></label>
-    <label>Quilometragem atual:<input type="number" id="kmAtual" required></label>
-    <label>Litros abastecidos:<input type="number" step="0.1" id="litros" required></label>
-    <label>Valor abastecido (R$):<input type="number" step="0.01" id="valor" required></label>
-    <label>Motorista/Técnico:<input type="text" id="tecnico" required></label>
-    <label>Observações:<textarea id="observacao"></textarea></label>
+        <div style="margin-bottom:16px;">
+          <label>Motivo da Falha *</label>
+          <div class="checkbox-grid">
+            <label class="checkbox-item"><input type="checkbox" name="motivo" value="esquecimento"> Esquecimento</label>
+            <label class="checkbox-item"><input type="checkbox" name="motivo" value="problema_tecnico"> Problema técnico</label>
+            <label class="checkbox-item"><input type="checkbox" name="motivo" value="saida_autorizada"> Saída autorizada</label>
+            <label class="checkbox-item"><input type="checkbox" name="motivo" value="outro"> Outro</label>
+          </div>
+          <div class="error" id="err-motivo">Selecione pelo menos um motivo.</div>
+        </div>
 
-    <div class="top-buttons">
-      <button type="submit">Salvar</button>
-      <button type="button" onclick="exportarExcel()">📥 Exportar Excel</button>
-      <button type="button" onclick="fazerLogout()">🚪 Sair</button>
+        <div class="row">
+          <div class="col-2">
+            <label for="motivoOutro">Se “Outro”, especifique</label>
+            <input id="motivoOutro" name="motivoOutro" type="text" placeholder="Descreva se aplicável" />
+          </div>
+        </div>
+
+        <div style="margin-bottom:16px;">
+          <label for="descricao">Descrição detalhada</label>
+          <textarea id="descricao" name="descricao" placeholder="Explique o ocorrido"></textarea>
+        </div>
+
+        <div class="row">
+          <div class="col-2">
+            <label for="assinatura_servidor">Assinatura do Servidor *</label>
+            <input id="assinatura_servidor" name="assinatura_servidor" type="text" required placeholder="Nome para assinatura" />
+            <div class="error" id="err-assinatura_servidor">Assinatura requerida.</div>
+          </div>
+          <div class="col-2">
+            <label for="data_assinatura_servidor">Data da assinatura *</label>
+            <input id="data_assinatura_servidor" name="data_assinatura_servidor" type="date" required />
+            <div class="error" id="err-data_assinatura_servidor">Informe a data.</div>
+          </div>
+        </div>
+
+        <div style="margin-bottom:16px;">
+          <label>Validação da Chefia *</label>
+          <div class="checkbox-grid">
+            <label class="checkbox-item"><input type="radio" name="validacao" value="deferido"> Deferido</label>
+            <label class="checkbox-item"><input type="radio" name="validacao" value="indeferido"> Indeferido</label>
+          </div>
+          <div class="error" id="err-validacao">Selecione uma opção.</div>
+        </div>
+
+        <div class="row">
+          <div class="col-2">
+            <label for="assinatura_secretario">Assinatura do Secretário(a)</label>
+            <input id="assinatura_secretario" name="assinatura_secretario" type="text" placeholder="Nome do(a) secretário(a)" />
+          </div>
+          <div class="col-2">
+            <label for="data_secretario">Data (secretário)</label>
+            <input id="data_secretario" name="data_secretario" type="date" />
+          </div>
+        </div>
+
+        <div class="actions">
+          <button type="button" class="btn-secondary" id="btn-reset">Limpar</button>
+          <button type="submit" class="btn-primary">Enviar</button>
+        </div>
+
+        <div class="summary" id="summaryBox"></div>
+      </form>
     </div>
-  </form>
-
-  <h3>Registros de <span id="mesAtualTabela"></span></h3>
-
-  <label>Visualizar outro dia:</label>
-  <select id="selecionarDia" onchange="atualizarTabela(this.value)"></select>
-
-  <div style="overflow-x: auto">
-    <table id="tabela-registros">
-      <thead>
-        <tr>
-          <th>Data</th>
-          <th>Hora</th>
-          <th>Placa</th>
-          <th>KM Atual</th>
-          <th>Litros</th>
-          <th>R$</th>
-          <th>R$/Litro</th>
-          <th>Motorista</th>
-          <th>Observações</th>
-          <th>Ação</th>
-        </tr>
-      </thead>
-      <tbody></tbody>
-    </table>
   </div>
-
-  <footer>
-    <p>&copy; Desenvolvido por Wallace Tadeu 2025</p>
-  </footer>
-
   <script src="script.js"></script>
 </body>
 </html>
