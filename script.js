@@ -1,157 +1,77 @@
-const STORAGE_KEY = "controle_abastecimento";
-let dadosPorDia = {};
+(function(){
+  const form = document.getElementById('justForm');
+  const summaryBox = document.getElementById('summaryBox');
 
-window.onload = () => {
-  const data = new Date();
-  const nomeMes = data.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' });
-  document.getElementById("mesAtual").textContent = nomeMes.charAt(0).toUpperCase() + nomeMes.slice(1);
-  document.getElementById("mesAtualTabela").textContent = nomeMes.charAt(0).toUpperCase() + nomeMes.slice(1);
-
-  const salvo = localStorage.getItem(STORAGE_KEY);
-  if (salvo) dadosPorDia = JSON.parse(salvo);
-
-  preencherDias();
-  atualizarTabela();
-};
-
-document.getElementById("formulario").addEventListener("submit", function (e) {
-  e.preventDefault();
-
-  const agora = new Date();
-  const data = agora.toLocaleDateString('pt-BR');
-  const hora = agora.toLocaleTimeString('pt-BR');
-  const dia = "Dia " + agora.getDate().toString().padStart(2, "0");
-
-  const registro = {
-    Data: data,
-    Hora: hora,
-    Placa: document.getElementById("placa").value.trim(),
-    KmAtual: parseFloat(document.getElementById("kmAtual").value),
-    Litros: parseFloat(document.getElementById("litros").value),
-    Valor: parseFloat(document.getElementById("valor").value),
-    Tecnico: document.getElementById("tecnico").value.trim(),
-    Observacao: document.getElementById("observacao").value.trim(),
-  };
-
-  if (!dadosPorDia[dia]) dadosPorDia[dia] = [];
-  dadosPorDia[dia].push(registro);
-
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(dadosPorDia));
-  alert("Registro salvo com sucesso!");
-
-  this.reset();
-  preencherDias();
-  atualizarTabela(dia);
-});
-
-function preencherDias() {
-  const select = document.getElementById("selecionarDia");
-  select.innerHTML = "";
-
-  const hoje = new Date();
-  const diaHoje = "Dia " + hoje.getDate().toString().padStart(2, "0");
-  const diasOrdenados = Object.keys(dadosPorDia).sort(
-    (a, b) => parseInt(a.replace("Dia ", "")) - parseInt(b.replace("Dia ", ""))
-  );
-
-  for (const dia of diasOrdenados) {
-    const opt = document.createElement("option");
-    opt.value = dia;
-    opt.textContent = dia;
-    select.appendChild(opt);
+  function showError(id, show, text) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.style.display = show ? 'block' : 'none';
+    if (text) el.textContent = text;
   }
 
-  if (!select.value) {
-    const optHoje = document.createElement("option");
-    optHoje.value = diaHoje;
-    optHoje.textContent = diaHoje;
-    select.appendChild(optHoje);
+  function getMotivosChecked() {
+    return Array.from(document.querySelectorAll('input[name="motivo"]:checked')).map(i => i.value);
   }
 
-  select.value = diaHoje;
-}
+  form.addEventListener('submit', function(e){
+    e.preventDefault();
+    ['err-nome','err-matricula','err-data','err-motivo','err-assinatura_servidor','err-data_assinatura_servidor','err-validacao']
+      .forEach(id => showError(id, false));
 
-function atualizarTabela(diaSelecionado = null) {
-  const hoje = new Date();
-  const nomeAba = diaSelecionado || "Dia " + hoje.getDate().toString().padStart(2, "0");
+    let valid = true;
+    if (!form.nome.value.trim()) { showError('err-nome', true); valid = false; }
+    if (!form.matricula.value.trim()) { showError('err-matricula', true); valid = false; }
+    if (!form.data.value) { showError('err-data', true); valid = false; }
+    if (getMotivosChecked().length === 0) { showError('err-motivo', true); valid = false; }
+    if (!form.assinatura_servidor.value.trim()) { showError('err-assinatura_servidor', true); valid = false; }
+    if (!form.data_assinatura_servidor.value) { showError('err-data_assinatura_servidor', true); valid = false; }
+    if (!document.querySelector('input[name="validacao"]:checked')) { showError('err-validacao', true); valid = false; }
 
-  const tbody = document.querySelector("#tabela-registros tbody");
-  tbody.innerHTML = "";
+    if (!valid) { window.scrollTo({ top: 0, behavior: 'smooth' }); return; }
 
-  if (!dadosPorDia[nomeAba]) return;
-
-  dadosPorDia[nomeAba].forEach((reg, index) => {
-    const tr = document.createElement("tr");
-
-    const td = (text) => {
-      const td = document.createElement("td");
-      td.textContent = text || "";
-      return td;
+    const data = {
+      nome: form.nome.value,
+      matricula: form.matricula.value,
+      data_ocorrido: form.data.value,
+      horarios: form.horarios.value,
+      motivos: getMotivosChecked().join(', '),
+      motivoOutro: form.motivoOutro.value,
+      descricao: form.descricao.value,
+      assinatura_servidor: form.assinatura_servidor.value,
+      data_assinatura_servidor: form.data_assinatura_servidor.value,
+      validacao: document.querySelector('input[name="validacao"]:checked').value,
+      assinatura_secretario: form.assinatura_secretario.value,
+      data_secretario: form.data_secretario.value
     };
 
-    const precoPorLitro = reg.Litros > 0 ? (reg.Valor / reg.Litros).toFixed(2) : "0.00";
-
-    tr.appendChild(td(reg.Data));
-    tr.appendChild(td(reg.Hora));
-    tr.appendChild(td(reg.Placa));
-    tr.appendChild(td(reg.KmAtual));
-    tr.appendChild(td(reg.Litros));
-    tr.appendChild(td("R$ " + reg.Valor.toFixed(2)));
-    tr.appendChild(td("R$ " + precoPorLitro));
-    tr.appendChild(td(reg.Tecnico));
-    tr.appendChild(td(reg.Observacao));
-
-    const tdAcoes = document.createElement("td");
-    tdAcoes.className = "acoes";
-    tdAcoes.innerHTML = `
-      <button onclick="deletarRegistro('${nomeAba}', ${index})">❌</button>`;
-    tr.appendChild(tdAcoes);
-
-    tbody.appendChild(tr);
+    summaryBox.style.display = 'block';
+    summaryBox.innerHTML = '<strong>Resumo:</strong><br>' +
+      'Nome: ' + escapeHtml(data.nome) + '<br>' +
+      'Matrícula: ' + escapeHtml(data.matricula) + '<br>' +
+      'Data: ' + escapeHtml(data.data_ocorrido) + '<br>' +
+      'Horários: ' + escapeHtml(data.horarios) + '<br>' +
+      'Motivos: ' + escapeHtml(data.motivos) + '<br>' +
+      (data.motivoOutro ? 'Outro: ' + escapeHtml(data.motivoOutro) + '<br>' : '') +
+      'Descrição: ' + (data.descricao ? escapeHtml(data.descricao) : '<i>—</i>') + '<br>' +
+      'Assinatura servidor: ' + escapeHtml(data.assinatura_servidor) + ' — ' + escapeHtml(data.data_assinatura_servidor) + '<br>' +
+      'Validação chefia: ' + escapeHtml(data.validacao) + '<br>' +
+      (data.assinatura_secretario ? 'Assinatura secretário: ' + escapeHtml(data.assinatura_secretario) + ' — ' + escapeHtml(data.data_secretario) + '<br>' : '') +
+      '<div style="margin-top:8px; font-size:13px; color:#555;">Este é um resumo local. Substitua por integração de backend para gravar/envio.</div>';
+    window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
   });
-}
 
-function deletarRegistro(dia, index) {
-  if (confirm("Deseja realmente excluir este registro?")) {
-    dadosPorDia[dia].splice(index, 1);
-    if (dadosPorDia[dia].length === 0) delete dadosPorDia[dia];
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(dadosPorDia));
-    alert("Registro excluído com sucesso!");
-    preencherDias();
-    atualizarTabela(document.getElementById("selecionarDia").value);
+  document.getElementById('btn-reset').addEventListener('click', function(){
+    form.reset();
+    summaryBox.style.display = 'none';
+    document.querySelectorAll('.error').forEach(el => el.style.display = 'none');
+  });
+
+  function escapeHtml(str) {
+    if (!str) return '';
+    return str.replace(/[&<>"'`=\\/]/g, function(s) {
+      return ({
+        '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;', '/':'&#x2F;', '`':'&#x60;', '=':'&#x3D;'
+      })[s];
+    });
   }
-}
-
-function exportarExcel() {
-  const wb = XLSX.utils.book_new();
-  const diasOrdenados = Object.keys(dadosPorDia).sort(
-    (a, b) => parseInt(a.replace("Dia ", "")) - parseInt(b.replace("Dia ", ""))
-  );
-
-  for (const dia of diasOrdenados) {
-    const registrosFormatados = dadosPorDia[dia].map((reg) => ({
-      "Data": reg.Data,
-      "Hora": reg.Hora,
-      "Placa": reg.Placa,
-      "KM Atual": reg.KmAtual,
-      "Litros": reg.Litros,
-      "Valor (R$)": reg.Valor.toFixed(2),
-      "Preço por Litro (R$)": reg.Litros > 0 ? (reg.Valor / reg.Litros).toFixed(2) : "0.00",
-      "Motorista": reg.Tecnico,
-      "Observações": reg.Observacao,
-    }));
-
-    const ws = XLSX.utils.json_to_sheet(registrosFormatados);
-    XLSX.utils.book_append_sheet(wb, ws, dia);
-  }
-
-  XLSX.writeFile(wb, "controle_abastecimento.xlsx");
-}
-
-function fazerLogout() {
-  if (confirm("Deseja realmente sair?")) {
-    localStorage.clear();
-    alert("Você saiu do sistema.");
-    location.reload();
-  }
-    }
+})();
