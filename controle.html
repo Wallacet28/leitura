@@ -3,23 +3,20 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Controle de Ponto — Justificativas Assinadas</title>
+  <title>Controle de Ponto — Visualização</title>
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
   <div class="container">
     <header class="top">
-      <h1>Controle de Ponto</h1>
-      <p class="subtitle">Formulários assinados</p>
+      <h1>Controle de Ponto — Visualização</h1>
     </header>
 
-    <main id="lista" class="card">
-      <!-- lista preenchida por JS -->
-    </main>
-
-    <footer class="note">
-      <a href="index.html" class="link-small">Voltar ao formulário</a>
-    </footer>
+    <div class="card" id="visualizacao">
+      <h2>Último formulário assinado</h2>
+      <p id="dadosFormulario"></p>
+      <button id="enviarWhatsApp" class="btn primary">Enviar via WhatsApp</button>
+    </div>
   </div>
 
   <script src="script.js"></script>
