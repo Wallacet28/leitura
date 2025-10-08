@@ -1,109 +1,53 @@
-<!doctype html>
-<html lang="pt-BR">
+<!DOCTYPE html>
+<html lang="pt-br">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Formulário de Justificativa de Ponto</title>
+  <title>Justificativa de Ponto — Secretaria de Educação</title>
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <div class="wrap">
-    <header>
-      <h1>Justificativa de Ponto Eletrônico</h1>
-      <p>Preencha os campos necessários e envie para assinatura.</p>
+  <div class="container">
+    <header class="top">
+      <!-- Logo opcional: coloque <img src="logo.png" alt="logo"> se tiver -->
+      <h1>Justificativa de Ponto — Secretaria de Educação</h1>
     </header>
-    <div class="card">
-      <form id="justForm" novalidate>
-        <div class="row">
-          <div class="col-2">
-            <label for="nome">Nome do Servidor/Colaborador *</label>
-            <input id="nome" name="nome" type="text" required placeholder="Digite seu nome" />
-            <div class="error" id="err-nome">Informe seu nome.</div>
-          </div>
-          <div class="col-2">
-            <label for="matricula">Matrícula/Registro *</label>
-            <input id="matricula" name="matricula" type="text" required placeholder="Número da matrícula" />
-            <div class="error" id="err-matricula">Informe a matrícula.</div>
-          </div>
-        </div>
 
-        <div class="row">
-          <div class="col-3">
-            <label for="data">Data do Ocorrido *</label>
-            <input id="data" name="data" type="date" required />
-            <div class="error" id="err-data">Informe a data.</div>
-          </div>
-          <div class="col-2">
-            <label for="horarios">Horário(s)</label>
-            <input id="horarios" name="horarios" type="text" placeholder="Ex: 08:00–12:00; 14:30" />
-          </div>
-        </div>
+    <form id="formJustificativa" class="card">
+      <label for="nome">Nome completo</label>
+      <input id="nome" name="nome" required placeholder="Digite seu nome">
 
-        <div style="margin-bottom:16px;">
-          <label>Motivo da Falha *</label>
-          <div class="checkbox-grid">
-            <label class="checkbox-item"><input type="checkbox" name="motivo" value="esquecimento"> Esquecimento</label>
-            <label class="checkbox-item"><input type="checkbox" name="motivo" value="problema_tecnico"> Problema técnico</label>
-            <label class="checkbox-item"><input type="checkbox" name="motivo" value="saida_autorizada"> Saída autorizada</label>
-            <label class="checkbox-item"><input type="checkbox" name="motivo" value="outro"> Outro</label>
-          </div>
-          <div class="error" id="err-motivo">Selecione pelo menos um motivo.</div>
-        </div>
+      <label for="matricula">Matrícula</label>
+      <input id="matricula" name="matricula" required placeholder="Digite sua matrícula">
 
-        <div class="row">
-          <div class="col-2">
-            <label for="motivoOutro">Se “Outro”, especifique</label>
-            <input id="motivoOutro" name="motivoOutro" type="text" placeholder="Descreva se aplicável" />
-          </div>
-        </div>
+      <label for="data">Data</label>
+      <input id="data" name="data" type="date" required>
 
-        <div style="margin-bottom:16px;">
-          <label for="descricao">Descrição detalhada</label>
-          <textarea id="descricao" name="descricao" placeholder="Explique o ocorrido"></textarea>
-        </div>
+      <label for="horario">Horário (opcional)</label>
+      <input id="horario" name="horario" type="time" placeholder="HH:MM">
 
-        <div class="row">
-          <div class="col-2">
-            <label for="assinatura_servidor">Assinatura do Servidor *</label>
-            <input id="assinatura_servidor" name="assinatura_servidor" type="text" required placeholder="Nome para assinatura" />
-            <div class="error" id="err-assinatura_servidor">Assinatura requerida.</div>
-          </div>
-          <div class="col-2">
-            <label for="data_assinatura_servidor">Data da assinatura *</label>
-            <input id="data_assinatura_servidor" name="data_assinatura_servidor" type="date" required />
-            <div class="error" id="err-data_assinatura_servidor">Informe a data.</div>
-          </div>
-        </div>
+      <label for="motivo">Motivo da justificativa</label>
+      <textarea id="motivo" name="motivo" rows="4" required placeholder="Descreva o motivo..."></textarea>
 
-        <div style="margin-bottom:16px;">
-          <label>Validação da Chefia *</label>
-          <div class="checkbox-grid">
-            <label class="checkbox-item"><input type="radio" name="validacao" value="deferido"> Deferido</label>
-            <label class="checkbox-item"><input type="radio" name="validacao" value="indeferido"> Indeferido</label>
-          </div>
-          <div class="error" id="err-validacao">Selecione uma opção.</div>
-        </div>
+      <div class="checkbox-area">
+        <p>Tipo de ocorrência (marque os que se aplicam)</p>
+        <label><input type="checkbox" name="tipo" value="Falha no ponto"> Falha no ponto</label>
+        <label><input type="checkbox" name="tipo" value="Esquecimento"> Esquecimento</label>
+        <label><input type="checkbox" name="tipo" value="Problema técnico"> Problema técnico</label>
+        <label><input type="checkbox" name="tipo" value="Outro"> Outro</label>
+      </div>
 
-        <div class="row">
-          <div class="col-2">
-            <label for="assinatura_secretario">Assinatura do Secretário(a)</label>
-            <input id="assinatura_secretario" name="assinatura_secretario" type="text" placeholder="Nome do(a) secretário(a)" />
-          </div>
-          <div class="col-2">
-            <label for="data_secretario">Data (secretário)</label>
-            <input id="data_secretario" name="data_secretario" type="date" />
-          </div>
-        </div>
+      <div class="actions">
+        <button type="submit" class="btn primary">Enviar para secretário</button>
+        <button type="reset" class="btn ghost">Limpar</button>
+      </div>
+    </form>
 
-        <div class="actions">
-          <button type="button" class="btn-secondary" id="btn-reset">Limpar</button>
-          <button type="submit" class="btn-primary">Enviar</button>
-        </div>
-
-        <div class="summary" id="summaryBox"></div>
-      </form>
-    </div>
+    <footer class="note">
+      <a href="controle.html" class="link-small">Ir para Controle de Ponto (visualizar assinados)</a>
+    </footer>
   </div>
+
   <script src="script.js"></script>
 </body>
 </html>
