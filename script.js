@@ -10,16 +10,15 @@ if(document.getElementById('formJustificativa')){
     const motivo = document.getElementById('motivo').value;
     const tipos = Array.from(document.querySelectorAll('.tipo:checked')).map(cb => cb.value).join(', ');
 
-    // Salva dados no localStorage
-    localStorage.setItem('nome', nome);
-    localStorage.setItem('matricula', matricula);
-    localStorage.setItem('data', data);
-    localStorage.setItem('horario', horario);
-    localStorage.setItem('motivo', motivo);
-    localStorage.setItem('tipos', tipos);
+    // Recupera array existente ou cria um novo
+    const justificativas = JSON.parse(localStorage.getItem('justificativas')) || [];
 
-    // Monta mensagem para o Secretário
-    const numeroSecretario = '5531985396866'; // Substitua pelo número do secretário
+    // Adiciona nova justificativa sem assinatura
+    justificativas.push({ nome, matricula, data, horario, motivo, tipos, assinatura: null });
+    localStorage.setItem('justificativas', JSON.stringify(justificativas));
+
+    // Envia para WhatsApp do Secretário
+    const numeroSecretario = '5531985396866';
     const mensagem = `*Formulário de Justificativa*\n\n` +
                      `👤 Nome: ${nome}\n` +
                      `🆔 Matrícula: ${matricula}\n` +
@@ -27,87 +26,83 @@ if(document.getElementById('formJustificativa')){
                      `📝 Motivo: ${motivo}\n` +
                      `📌 Tipo: ${tipos}\n\n➡️ Favor assinar.`;
 
-    const url = `https://wa.me/${numeroSecretario}?text=${encodeURIComponent(mensagem)}`;
-    window.open(url, '_blank');
+    window.open(`https://wa.me/${numeroSecretario}?text=${encodeURIComponent(mensagem)}`, '_blank');
     alert('Mensagem enviada para o Secretário via WhatsApp!');
     this.reset();
   });
 }
 
 // ------------------- Secretário -------------------
-if(document.getElementById('assinaturaForm')){
-  // Pré-preenche dados do funcionário
-  document.addEventListener('DOMContentLoaded', () => {
-    document.getElementById('nome').value = localStorage.getItem('nome') || '';
-    document.getElementById('matricula').value = localStorage.getItem('matricula') || '';
-    document.getElementById('data').value = localStorage.getItem('data') || '';
-    document.getElementById('horario').value = localStorage.getItem('horario') || '';
-    document.getElementById('motivo').value = localStorage.getItem('motivo') || '';
-    document.getElementById('tipos').value = localStorage.getItem('tipos') || '';
-  });
+if(document.getElementById('listaJustificativas')){
+  const listaDiv = document.getElementById('listaJustificativas');
+  let justificativas = JSON.parse(localStorage.getItem('justificativas')) || [];
 
-  document.getElementById('assinaturaForm').addEventListener('submit', function(e){
-    e.preventDefault();
+  function renderLista() {
+    listaDiv.innerHTML = '';
+    justificativas.forEach((j, index) => {
+      if(!j.assinatura){
+        const card = document.createElement('div');
+        card.classList.add('card');
+        card.innerHTML = `
+          <p><strong>Nome:</strong> ${j.nome}</p>
+          <p><strong>Matrícula:</strong> ${j.matricula}</p>
+          <p><strong>Data:</strong> ${j.data} ${j.horario}</p>
+          <p><strong>Motivo:</strong> ${j.motivo}</p>
+          <p><strong>Tipo:</strong> ${j.tipos}</p>
+          <input type="text" placeholder="Digite sua assinatura" id="assinatura-${index}" />
+          <button class="btn primary" onclick="assinar(${index})">Assinar e Enviar</button>
+        `;
+        listaDiv.appendChild(card);
+      }
+    });
+  }
 
-    const assinatura = document.getElementById('assinatura').value;
-    localStorage.setItem('assinatura', assinatura);
+  window.assinar = function(index){
+    const assinatura = document.getElementById(`assinatura-${index}`).value;
+    if(!assinatura){ alert('Digite a assinatura'); return; }
+    justificativas[index].assinatura = assinatura;
 
-    const nome = document.getElementById('nome').value;
-    const matricula = document.getElementById('matricula').value;
-    const data = document.getElementById('data').value;
-    const horario = document.getElementById('horario').value;
-    const motivo = document.getElementById('motivo').value;
-    const tipos = document.getElementById('tipos').value;
+    // Atualiza localStorage
+    localStorage.setItem('justificativas', JSON.stringify(justificativas));
 
-    // Monta mensagem para o Controle
-    const numeroControle = '5531985396866'; // Substitua pelo número do controle
+    // Envia WhatsApp para Controle
+    const j = justificativas[index];
+    const numeroControle = '5531985396866';
     const mensagem = `*Formulário de Justificativa - Assinado*\n\n` +
-                     `👤 Nome: ${nome}\n` +
-                     `🆔 Matrícula: ${matricula}\n` +
-                     `📅 Data: ${data} ${horario}\n` +
-                     `📝 Motivo: ${motivo}\n` +
-                     `📌 Tipo: ${tipos}\n` +
+                     `👤 Nome: ${j.nome}\n` +
+                     `🆔 Matrícula: ${j.matricula}\n` +
+                     `📅 Data: ${j.data} ${j.horario}\n` +
+                     `📝 Motivo: ${j.motivo}\n` +
+                     `📌 Tipo: ${j.tipos}\n` +
                      `✍️ Assinado por: ${assinatura}`;
 
-    const url = `https://wa.me/${numeroControle}?text=${encodeURIComponent(mensagem)}`;
-    window.open(url, '_blank');
-    alert('Mensagem enviada para Controle via WhatsApp!');
-    this.reset();
-  });
+    window.open(`https://wa.me/${numeroControle}?text=${encodeURIComponent(mensagem)}`, '_blank');
+
+    renderLista();
+    alert('Justificativa assinada e enviada para Controle!');
+  }
+
+  renderLista();
 }
 
 // ------------------- Controle -------------------
-if(document.getElementById('visualizacao')){
-  const nome = localStorage.getItem('nome') || '';
-  const matricula = localStorage.getItem('matricula') || '';
-  const data = localStorage.getItem('data') || '';
-  const horario = localStorage.getItem('horario') || '';
-  const motivo = localStorage.getItem('motivo') || '';
-  const tipos = localStorage.getItem('tipos') || '';
-  const assinatura = localStorage.getItem('assinatura') || 'Não assinada';
+if(document.getElementById('listaAssinadas')){
+  const listaAssinadasDiv = document.getElementById('listaAssinadas');
+  const justificativas = JSON.parse(localStorage.getItem('justificativas')) || [];
 
-  const dadosDiv = document.getElementById('dadosFormulario');
-  dadosDiv.innerHTML = `
-      <strong>Nome:</strong> ${nome}<br>
-      <strong>Matrícula:</strong> ${matricula}<br>
-      <strong>Data:</strong> ${data} ${horario}<br>
-      <strong>Motivo:</strong> ${motivo}<br>
-      <strong>Tipo:</strong> ${tipos}<br>
-      <strong>Assinatura:</strong> ${assinatura}
-  `;
-
-  // Botão para enviar via WhatsApp
-  document.getElementById('enviarWhatsApp').addEventListener('click', () => {
-    const mensagem = `*Formulário de Justificativa - Controle*\n\n` +
-                     `👤 Nome: ${nome}\n` +
-                     `🆔 Matrícula: ${matricula}\n` +
-                     `📅 Data: ${data} ${horario}\n` +
-                     `📝 Motivo: ${motivo}\n` +
-                     `📌 Tipo: ${tipos}\n` +
-                     `✍️ Assinado por: ${assinatura}`;
-
-    const numeroControle = '5531985396866'; // Número para envio
-    const url = `https://wa.me/${numeroControle}?text=${encodeURIComponent(mensagem)}`;
-    window.open(url, '_blank');
+  justificativas.forEach(j => {
+    if(j.assinatura){
+      const card = document.createElement('div');
+      card.classList.add('card');
+      card.innerHTML = `
+        <p><strong>Nome:</strong> ${j.nome}</p>
+        <p><strong>Matrícula:</strong> ${j.matricula}</p>
+        <p><strong>Data:</strong> ${j.data} ${j.horario}</p>
+        <p><strong>Motivo:</strong> ${j.motivo}</p>
+        <p><strong>Tipo:</strong> ${j.tipos}</p>
+        <p><strong>Assinatura:</strong> ${j.assinatura}</p>
+      `;
+      listaAssinadasDiv.appendChild(card);
+    }
   });
-}
+    }
